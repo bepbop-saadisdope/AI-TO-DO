@@ -1,0 +1,29 @@
+# Brings up PostgreSQL with the pgvector extension baked in.
+# We use the pgvector image now (not plain postgres) so Phase 2's vector search
+# needs ZERO migration or image swap later.
+#
+#   docker compose up -d      # start the database
+#   docker compose down       # stop it (data survives in the named volume)
+#   docker compose down -v     # stop AND wipe the data volume
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ai-todo-db
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+      POSTGRES_DB: todo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Compose marks the container "healthy" only once Postgres accepts connections.
+      test: ["CMD-SHELL", "pg_isready -U todo -d todo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
