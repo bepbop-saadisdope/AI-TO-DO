@@ -19,6 +19,7 @@ from app.core.database import Base, engine, get_db
 # Importing the models module registers the Todo table on Base.metadata so
 # create_all() below knows about it. (noqa: imported for its side effect.)
 from app.todos import models  # noqa: F401
+from app.todos.router import router as todos_router
 
 
 @asynccontextmanager
@@ -51,3 +52,7 @@ def health(db: Session = Depends(get_db)) -> dict:
     """
     db.execute(text("SELECT 1"))
     return {"status": "ok", "database": "connected"}
+
+
+# Mount the todo CRUD endpoints under /api/todos.
+app.include_router(todos_router)
