@@ -1,0 +1,14 @@
+# Web framework + ASGI server
+fastapi
+uvicorn[standard]
+
+# ORM + Postgres driver (psycopg3; matches the postgresql+psycopg:// URL)
+sqlalchemy>=2.0
+psycopg[binary]
+
+# Loads settings from environment / .env
+pydantic-settings
+
+# Testing (used from feature/tests onward)
+pytest
+httpx
