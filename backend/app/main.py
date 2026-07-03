@@ -6,15 +6,30 @@ app can actually reach Postgres. Todo routes are added in feature/todo-crud.
 Run it:  uvicorn app.main:app --reload   (from the backend/ directory)
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.database import get_db
+from app.core.database import Base, engine, get_db
 
-app = FastAPI(title="AI-Powered Todo", version="0.1.0")
+# Importing the models module registers the Todo table on Base.metadata so
+# create_all() below knows about it. (noqa: imported for its side effect.)
+from app.todos import models  # noqa: F401
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Phase 1 uses create_all() for simplicity; we switch to Alembic migrations
+    # in Phase 4 when adding user_id first makes schema changes painful.
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(title="AI-Powered Todo", version="0.1.0", lifespan=lifespan)
 
 # Allow the React dev server to call this API from the browser.
 app.add_middleware(
