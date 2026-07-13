@@ -1,12 +1,4 @@
-"""Pydantic schemas — the API's request/response contract.
-
-These are DIFFERENT from the ORM model on purpose:
-- The ORM `Todo` describes the database table.
-- These schemas describe what the client may send and what we return.
-
-Keeping them separate means the client can never set server-owned fields
-(id, created_at, updated_at) and validation happens before we touch the DB.
-"""
+"""Pydantic schemas for the Todo API."""
 
 import uuid
 from datetime import date, datetime
@@ -17,7 +9,7 @@ from app.todos.models import Priority, Status
 
 
 class TodoBase(BaseModel):
-    """Fields a client is allowed to provide when creating a todo."""
+    """Base validation schema for a Todo."""
 
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None
@@ -28,12 +20,11 @@ class TodoBase(BaseModel):
 
 
 class TodoCreate(TodoBase):
-    """Body for POST /api/todos. Same as base for now."""
+    """Validation schema for creating a Todo."""
 
 
 class TodoUpdate(BaseModel):
-    """Body for PATCH /api/todos/{id} — every field optional so callers can send
-    a partial update. Only provided fields are changed."""
+    """Validation schema for updating a Todo."""
 
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
@@ -44,11 +35,11 @@ class TodoUpdate(BaseModel):
 
 
 class TodoOut(TodoBase):
-    """What the API returns. `from_attributes` lets us build it straight from an
-    ORM `Todo` instance."""
+    """Response serialization schema for a Todo."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+
