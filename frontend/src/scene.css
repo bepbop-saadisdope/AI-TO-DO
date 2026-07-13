@@ -1,0 +1,156 @@
+/* ============================================================
+   Immersive room scene: a fully code-drawn (inline SVG) room,
+   mood-themed by time of day, with animated curtain + plant,
+   boards mounted on the wall, and the zoom-to-focus board view.
+   ============================================================ */
+:root {
+  /* wall board anchor points (percent of viewport) */
+  --board-top: 30%;
+  --board-a-left: 8%;
+  --board-b-left: 36%;
+  --board-wall-w: 23%;
+}
+
+.room-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+
+  /* Mood palette — overridden per data-time below. */
+  --wall: #fff0d9;
+  --wall2: #ffe6c6;
+  --floor: #c9915b;
+  --floor2: #b87c46;
+  --frame: #8a5a34;
+  --sky: #cdeafe;
+  --beam: rgba(255, 246, 214, 0.5);
+  --curtain: #fbfaf6;
+  --leaf: #4f8f52;
+  --leaf2: #3f7a3f;
+  --pot: #c07a48;
+  --glow: transparent;
+}
+.room-scene[data-time="morning"] {
+  --wall: #fff0d9; --wall2: #ffe6c6; --sky: #cdeafe;
+  --beam: rgba(255, 221, 138, 0.55); --glow: transparent;
+}
+.room-scene[data-time="noon"] {
+  --wall: #fffaef; --wall2: #fdf1dc; --sky: #a9dbff;
+  --beam: rgba(255, 233, 158, 0.6); --glow: transparent;
+}
+.room-scene[data-time="dusk"] {
+  --wall: #ffe1c4; --wall2: #f6cba0; --floor: #b9764a; --floor2: #a5623a;
+  --sky: #ffcf9c; --frame: #7a4a2c; --beam: rgba(255, 156, 84, 0.55); --glow: transparent;
+}
+.room-scene[data-time="night"] {
+  --wall: #3a3450; --wall2: #2f2a43; --floor: #4a3f5a; --floor2: #3d3550;
+  --sky: #22304f; --frame: #241f30; --curtain: #d9dcf0; --beam: rgba(176, 190, 255, 0.34);
+  --leaf: #3f7a52; --leaf2: #356646; --pot: #8a5636; --glow: rgba(255, 224, 150, 0.5);
+}
+
+.room-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* SVG part fills bound to the mood palette */
+.rs-wall { fill: var(--wall); }
+.rs-wall2 { fill: var(--wall2); }
+.rs-floor { fill: var(--floor); }
+.rs-floor2 { fill: var(--floor2); }
+.rs-frame { fill: var(--frame); }
+.rs-sky { fill: var(--sky); }
+.rs-beam { fill: var(--beam); }
+.rs-curtain { fill: var(--curtain); }
+.rs-leaf { fill: var(--leaf); }
+.rs-leaf2 { fill: var(--leaf2); }
+.rs-pot { fill: var(--pot); }
+.rs-line { stroke: rgba(90, 62, 40, 0.18); stroke-width: 0.5; }
+
+/* Sun / moon disc */
+.rs-sun { fill: #fff2c4; }
+.room-scene[data-time="night"] .rs-sun { fill: #eef1ff; }
+
+/* Curtain & plant animate; steps() gives a choppy, pixel-ish motion.
+   Speed scales with --wind (0..1). */
+.svg-curtain {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: curtain-sway calc(3.4s - var(--wind, 0) * 2s) steps(6, end) infinite;
+}
+@keyframes curtain-sway {
+  0%, 100% { transform: skewX(0deg); }
+  50% { transform: skewX(calc(-3deg - var(--wind, 0) * 9deg)); }
+}
+.svg-plant {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: plant-rustle calc(2.8s - var(--wind, 0) * 1.6s) steps(4, end) infinite;
+}
+@keyframes plant-rustle {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(calc(-2deg - var(--wind, 0) * 5deg)); }
+}
+
+/* ---- Boards mounted on the wall (room view) ---- */
+.wall-board {
+  position: absolute;
+  top: var(--board-top);
+  width: var(--board-wall-w);
+  cursor: pointer;
+  filter: drop-shadow(6px 10px 10px rgba(70, 45, 25, 0.3));
+  transition: transform 160ms ease;
+}
+.wall-board:hover { transform: translateY(-4px) scale(1.02); }
+.wall-board.a { left: var(--board-a-left); }
+.wall-board.b { left: var(--board-b-left); }
+.wall-board .frame {
+  background-color: #c9a978;
+  background-image: radial-gradient(rgba(90, 62, 40, 0.18) 1px, transparent 1px);
+  background-size: 12px 12px;
+  border: 5px solid #a9855b;
+  border-radius: 8px;
+  padding: 14px;
+}
+.wall-board .string { position: absolute; top: -18px; left: 50%; width: 2px; height: 18px; background: rgba(80, 60, 45, 0.6); }
+.wall-board .nail { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); width: 8px; height: 8px; border-radius: 9999px; background: radial-gradient(circle at 35% 30%, #7c736e, #4a423e); }
+
+/* ---- Focused board view (after zoom) ---- */
+.focus-shade {
+  position: fixed; inset: 0; z-index: 20;
+  background: rgba(20, 15, 12, 0.45);
+  backdrop-filter: blur(3px);
+}
+.focus-wrap {
+  position: fixed; inset: 0; z-index: 21;
+  display: flex; align-items: center; justify-content: center;
+  /* extra bottom padding shifts the centered card a little upward */
+  padding: 16px 24px 84px; pointer-events: none;
+}
+.focus-card { width: 100%; max-width: 760px; pointer-events: auto; }
+
+/* Tied-back curtain's lower lobe billows from the tieback (top-center). */
+.curtain-hem {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: hem-billow calc(3.6s - var(--wind, 0) * 1.9s) ease-in-out infinite;
+}
+@keyframes hem-billow {
+  0%, 100% { transform: skewX(0deg) scaleX(1); }
+  50% { transform: skewX(calc(-0.5deg - var(--wind, 0) * 3deg)) scaleX(1.008); }
+}
+
+/* Sun rays: from a fixed base pixel, pixels grow outward to a set length and
+   retract back. steps() makes the growth jump pixel-by-pixel. */
+.ray-grow {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: ray-emerge 1.1s steps(4, end) infinite;
+}
+@keyframes ray-emerge {
+  0%, 100% { transform: scaleY(0.34); }
+  50% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svg-curtain, .svg-plant, .curtain-hem, .ray-grow { animation: none !important; }
+  .wall-board { transition: none; }
+}

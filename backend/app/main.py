@@ -32,10 +32,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AI-Powered Todo", version="0.1.0", lifespan=lifespan)
 
-# Allow the React dev server to call this API from the browser.
+# Allow the React dev server to call this API from the browser. The regex covers
+# any localhost port, since Vite may pick 5174+ when 5173 is already in use.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
