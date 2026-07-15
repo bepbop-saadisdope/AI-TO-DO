@@ -1,0 +1,361 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Pixido — Retro-Tactile design tokens (Tailwind v4 @theme)
+   Palette + type from the Stitch "Pixido" design system.
+   ============================================================ */
+@theme {
+  --color-surface: #fff8f6;
+  --color-surface-dim: #dfd9d7;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f9f2f0;
+  --color-surface-container: #f3eceb;
+  --color-surface-container-high: #ede7e5;
+  --color-surface-container-highest: #e8e1df;
+  --color-surface-variant: #e8e1df;
+  --color-on-surface: #1d1b1a;
+  --color-on-surface-variant: #4f4441;
+  --color-outline: #817470;
+  --color-outline-variant: #d3c3be;
+
+  --color-primary: #6d574f;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #876f67;
+  --color-on-primary-container: #fffbff;
+  --color-secondary: #636037;
+  --color-secondary-container: #e7e1ae;
+  --color-on-secondary-container: #67643b;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* sticky-note papers */
+  --color-note-yellow: #fdf9c4;
+  --color-note-pink: #ffdce5;
+  --color-note-mint: #d4f4e2;
+  --color-note-lavender: #e6ddf7;
+  --color-note-completed: #e8e1df;
+  --color-pin-red: #ba1a1a;
+  --color-stamp-green: #4b4822;
+
+  --font-display: "Press Start 2P", system-ui, sans-serif;
+  --font-body: "VT323", monospace;
+  --font-label: "Silkscreen", monospace;
+
+  --radius-xl: 0.5rem;
+}
+
+/* Material Symbols icon font */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+.material-symbols-outlined.fill {
+  font-variation-settings: "FILL" 1;
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global paper-grain noise so the whole app feels analog */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   Ambiance: a consistent CSS room + window, graded by time of day.
+   Driven by data-time / data-weather / data-wind on .ambiance-root.
+   ============================================================ */
+.ambiance-root {
+  --room-top: #fdf3e3;
+  --room-bottom: #f6e7d2;
+  --beam: rgba(255, 244, 214, 0.85);
+  --sky: #bfe3ff;
+  --wind: 0; /* 0..1, set inline from the wind slider */
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--room-top), var(--room-bottom));
+  transition: background 800ms ease;
+}
+.ambiance-root[data-time="morning"] {
+  --room-top: #fff4e0;
+  --room-bottom: #ffe9cf;
+  --beam: rgba(255, 246, 214, 0.9);
+  --sky: #cdeafe;
+}
+.ambiance-root[data-time="noon"] {
+  --room-top: #fffaf0;
+  --room-bottom: #fdf1dc;
+  --beam: rgba(255, 250, 230, 0.95);
+  --sky: #a9dbff;
+}
+.ambiance-root[data-time="dusk"] {
+  --room-top: #ffe7cf;
+  --room-bottom: #f7cfa8;
+  --beam: rgba(255, 208, 150, 0.85);
+  --sky: #ffcf9c;
+}
+.ambiance-root[data-time="night"] {
+  --room-top: #2f2a3d;
+  --room-bottom: #241f30;
+  --beam: rgba(180, 190, 255, 0.4);
+  --sky: #24304f;
+}
+
+/* Light beam spilling in from the window on the right */
+.ambiance-beam {
+  position: absolute;
+  top: -10%;
+  right: 12%;
+  width: 55%;
+  height: 130%;
+  transform: rotate(14deg);
+  background: linear-gradient(105deg, transparent 40%, var(--beam) 100%);
+  filter: blur(14px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* The window frame + sill */
+.ambiance-window {
+  position: absolute;
+  top: 8%;
+  right: 4%;
+  width: 300px;
+  height: 60%;
+  border: 10px solid var(--color-primary);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--sky), color-mix(in srgb, var(--sky) 60%, #ffffff));
+  box-shadow: 0 10px 40px rgba(109, 87, 79, 0.25);
+  overflow: hidden;
+}
+.ambiance-window::before,
+.ambiance-window::after {
+  content: "";
+  position: absolute;
+  background: var(--color-primary);
+}
+.ambiance-window::before { left: 50%; top: 0; bottom: 0; width: 8px; margin-left: -4px; }
+.ambiance-window::after { top: 50%; left: 0; right: 0; height: 8px; margin-top: -4px; }
+
+.ambiance-sun {
+  position: absolute;
+  top: 16%;
+  left: 20%;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #fff7d6, #ffe08a);
+  box-shadow: 0 0 40px 12px rgba(255, 224, 138, 0.7);
+}
+.ambiance-root[data-time="night"] .ambiance-sun {
+  background: radial-gradient(circle, #f2f4ff, #cfd6ff);
+  box-shadow: 0 0 30px 8px rgba(207, 214, 255, 0.6);
+}
+
+/* Curtain that sways with wind */
+.ambiance-curtain {
+  position: absolute;
+  top: -10px;
+  left: -6px;
+  width: 44%;
+  height: 108%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.35));
+  border-radius: 0 0 40% 0;
+  transform-origin: top left;
+  animation: sway calc(6s - var(--wind) * 4s) ease-in-out infinite;
+}
+@keyframes sway {
+  0%, 100% { transform: skewX(0deg) scaleX(1); }
+  50% { transform: skewX(calc(-4deg - var(--wind) * 10deg)) scaleX(1.04); }
+}
+
+.ambiance-plant {
+  position: absolute;
+  bottom: -2px;
+  right: 18%;
+  font-size: 34px;
+  filter: saturate(0.9);
+}
+
+/* Weather overlays */
+.weather-layer { position: absolute; inset: 0; pointer-events: none; }
+.weather-rain {
+  background-image: repeating-linear-gradient(
+    100deg,
+    transparent 0 22px,
+    rgba(160, 190, 220, 0.35) 22px 24px
+  );
+  background-size: 120px 120px;
+  animation: rain 0.5s linear infinite;
+  opacity: 0.5;
+}
+@keyframes rain { to { background-position: -40px 120px; } }
+.weather-snow {
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(2px 2px at 80px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(3px 3px at 130px 40px, rgba(255,255,255,0.9), transparent);
+  background-size: 180px 180px;
+  animation: snow 6s linear infinite;
+  opacity: 0.7;
+}
+@keyframes snow { to { background-position: 30px 180px; } }
+.weather-cloud {
+  background:
+    radial-gradient(120px 60px at 30% 25%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(160px 70px at 70% 20%, rgba(255,255,255,0.4), transparent);
+  animation: drift 30s linear infinite alternate;
+}
+@keyframes drift { to { background-position: 60px 0, -60px 0; } }
+
+/* ============================================================
+   Tactile board + sticky notes
+   ============================================================ */
+.tactile-board {
+  background-color: #c9a978;
+  background-image:
+    radial-gradient(rgba(90, 62, 40, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border: 6px solid #a9855b;
+  box-shadow: inset 0 2px 20px rgba(70, 45, 25, 0.35);
+}
+.tactile-board[data-tone="completed"] { filter: brightness(0.97) saturate(0.9); }
+
+.sticky-note {
+  position: relative;
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 4px 6px 14px rgba(109, 87, 79, 0.28);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  will-change: transform;
+}
+.sticky-note::after {
+  /* subtle paper grain per note */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  pointer-events: none;
+}
+.note-yellow { background-color: var(--color-note-yellow); }
+.note-pink { background-color: var(--color-note-pink); }
+.note-mint { background-color: var(--color-note-mint); }
+.note-lavender { background-color: var(--color-note-lavender); }
+.note-completed { background-color: var(--color-note-completed); }
+
+.sticky-note:hover { transform: translateY(-4px) rotate(0deg) scale(1.02); box-shadow: 6px 10px 20px rgba(109, 87, 79, 0.34); }
+
+/* Wind makes active notes flutter; stronger wind = faster/wider */
+.note-flutter {
+  animation: flutter calc(7s - var(--wind, 0) * 5s) ease-in-out infinite;
+}
+@keyframes flutter {
+  0%, 100% { transform: rotate(var(--rot, 0deg)) translateY(0); }
+  50% { transform: rotate(calc(var(--rot, 0deg) + var(--wind, 0) * 1.5deg)) translateY(calc(var(--wind, 0) * -3px)); }
+}
+
+.pushpin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #ff6b6b, var(--color-pin-red));
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+}
+.pushpin-gray { background: radial-gradient(circle at 35% 30%, #b9b2ae, #7c736e); }
+
+.stamp-done {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  color: var(--color-stamp-green);
+  border: 3px solid var(--color-stamp-green);
+  border-radius: 6px;
+  padding: 2px 6px;
+  opacity: 0.55;
+  transform: rotate(-8deg);
+}
+
+/* Priority accent dot */
+.prio-low { background-color: #4b7f52; }
+.prio-medium { background-color: #b7861f; }
+.prio-high { background-color: var(--color-error); }
+
+/* Reusable pixel button */
+.pixel-btn {
+  font-family: var(--font-label);
+  letter-spacing: 0.05em;
+  border-radius: 9999px;
+  box-shadow: 0 3px 0 rgba(109, 87, 79, 0.35);
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+.pixel-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(109, 87, 79, 0.35); }
+
+/* 16-bit style button: hard square box, beveled edges, hard offset shadow. */
+.pixel16 {
+  position: relative;
+  border-radius: 0;
+  border: 2px solid #3a2a22;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.30),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.24),
+    4px 4px 0 rgba(58, 42, 34, 0.5);
+  transition: none;
+}
+.pixel16:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, 0.30),
+    inset -3px -3px 0 rgba(0, 0, 0, 0.24),
+    2px 2px 0 rgba(58, 42, 34, 0.5);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  transition: background 120ms ease;
+}
+
+/* Accessibility: honor reduced-motion by stilling the ambiance/flutter */
+@media (prefers-reduced-motion: reduce) {
+  .note-flutter, .ambiance-curtain, .weather-rain, .weather-snow, .weather-cloud {
+    animation: none !important;
+  }
+  .sticky-note { transition: none; }
+}

@@ -1,0 +1,46 @@
+# Brings up the backend stack with one command:
+#
+#   docker compose up --build     # db + backend
+#   docker compose up -d db        # just the database (for local dev of the app)
+#   docker compose down            # stop everything (data survives in the volume)
+#
+# Uses the pgvector image now (not plain postgres) so Phase 2's vector search
+# needs ZERO migration or image swap later.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ai-todo-db
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+      POSTGRES_DB: todo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo -d todo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: ai-todo-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Inside the compose network Postgres is reachable at host "db".
+      DATABASE_URL: postgresql+psycopg://todo:todo@db:5432/todo
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # bind mount for hot-reload during dev
+      - /app/.venv    # keep container's .venv from being masked if local .venv exists
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres-data:
+
